@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "traceveil"
+version = "0.1.0"
+description = "Offline, conservative HAR sanitization and review reports"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Blaze"}]
+dependencies = []
+
+[project.scripts]
+traceveil = "traceveil.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

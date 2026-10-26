@@ -1,0 +1,87 @@
+{
+  "log": {
+    "version": "1.2",
+    "creator": {
+      "name": "Traceveil",
+      "version": "0.1.0"
+    },
+    "entries": [
+      {
+        "startedDateTime": "2000-01-01T00:00:00Z",
+        "time": 123.5,
+        "request": {
+          "method": "GET",
+          "url": "https://host-1.invalid/route-1",
+          "httpVersion": "HTTP/1.1",
+          "headers": [],
+          "cookies": [],
+          "queryString": [],
+          "headersSize": -1,
+          "bodySize": -1
+        },
+        "response": {
+          "status": 200,
+          "statusText": "",
+          "httpVersion": "HTTP/1.1",
+          "headers": [],
+          "cookies": [],
+          "content": {
+            "size": 42,
+            "mimeType": "application/json"
+          },
+          "redirectURL": "",
+          "headersSize": -1,
+          "bodySize": 42
+        },
+        "cache": {},
+        "timings": {
+          "blocked": -1,
+          "dns": -1,
+          "connect": -1,
+          "send": -1,
+          "wait": 100,
+          "receive": 23.5,
+          "ssl": -1
+        }
+      },
+      {
+        "startedDateTime": "2000-01-01T00:00:00Z",
+        "time": 450,
+        "request": {
+          "method": "GET",
+          "url": "https://host-1.invalid/route-1",
+          "httpVersion": "HTTP/1.1",
+          "headers": [],
+          "cookies": [],
+          "queryString": [],
+          "headersSize": -1,
+          "bodySize": -1
+        },
+        "response": {
+          "status": 500,
+          "statusText": "",
+          "httpVersion": "HTTP/1.1",
+          "headers": [],
+          "cookies": [],
+          "content": {
+            "size": 42,
+            "mimeType": "application/json"
+          },
+          "redirectURL": "",
+          "headersSize": -1,
+          "bodySize": 42
+        },
+        "cache": {},
+        "timings": {
+          "blocked": -1,
+          "dns": -1,
+          "connect": -1,
+          "send": -1,
+          "wait": 100,
+          "receive": 23.5,
+          "ssl": -1
+        }
+      }
+    ]
+  }
+}
