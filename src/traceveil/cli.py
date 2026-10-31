@@ -12,7 +12,7 @@ from .storage import MAX_BYTES, load, write_new
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Offline HAR privacy review and conservative export")
-    parser.add_argument("command", choices=["inspect", "sanitize", "report", "verify", "batch"])
+    parser.add_argument("command", choices=["inspect", "sanitize", "report", "verify", "batch", "review"])
     parser.add_argument("input", type=Path)
     parser.add_argument("additional_inputs", nargs="*", type=Path)
     parser.add_argument("-o", "--output", type=Path)
@@ -32,6 +32,16 @@ def main(argv=None):
         if args.command in {"inspect", "verify"} and args.output is not None:
             raise ValueError("inspect and verify do not write files")
         document = load(args.input)
+        if args.command == "review":
+            from .privacy import privacy_review
+            result = privacy_review(document)
+            text = json.dumps(result, indent=2, allow_nan=False) + "\n"
+            if args.output is None:
+                print(text, end="")
+            else:
+                write_new(args.output, text)
+                print("Wrote new local review. Manual review is still required.")
+            return 0 if result["canonical_safe_format"] else 1
         if args.command == "verify":
             valid = is_sanitized(document)
             print("Canonical conservative HAR" if valid else "Not a canonical conservative HAR")
