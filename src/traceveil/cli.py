@@ -12,7 +12,7 @@ from .storage import MAX_BYTES, load, write_new
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Offline HAR privacy review and conservative export")
-    parser.add_argument("command", choices=["inspect", "sanitize", "report", "verify", "batch", "review"])
+    parser.add_argument("command", choices=["inspect", "sanitize", "report", "verify", "batch", "review", "compare"])
     parser.add_argument("input", type=Path)
     parser.add_argument("additional_inputs", nargs="*", type=Path)
     parser.add_argument("-o", "--output", type=Path)
@@ -25,6 +25,18 @@ def main(argv=None):
             result = sanitize_batch([args.input, *args.additional_inputs], args.output)
             print(json.dumps(result, indent=2, allow_nan=False))
             return 0 if result["failed"] == 0 else 1
+        if args.command == "compare":
+            from .compare import compare_captures
+            if len(args.additional_inputs) != 1:
+                raise ValueError("compare requires exactly two captures")
+            result = compare_captures(load(args.input), load(args.additional_inputs[0]))
+            text = json.dumps(result, indent=2, allow_nan=False) + "\n"
+            if args.output is None:
+                print(text, end="")
+            else:
+                write_new(args.output, text)
+                print("Wrote new local aggregate comparison. Review before sharing.")
+            return 0
         if args.additional_inputs:
             raise ValueError("This command accepts one input")
         if args.command in {"sanitize", "report"} and args.output is None:
