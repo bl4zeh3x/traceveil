@@ -21,7 +21,7 @@ def write_new(path, text):
     # O_EXCL refuses existing files and symlinks; never overwrite the source.
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as stream:
             stream.write(text)
     except BaseException:
         path.unlink(missing_ok=True)

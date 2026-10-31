@@ -74,6 +74,13 @@ class BatchTests(unittest.TestCase):
         for target in self.output.iterdir():
             self.assertEqual(target.stat().st_mode & 0o777, 0o600)
 
+    def test_output_bytes_are_utf8_with_lf_on_every_platform(self):
+        from traceveil.storage import write_new
+        text = 'first line\nUnicode: café\n'
+        target = self.root / 'text.json'
+        write_new(target, text)
+        self.assertEqual(target.read_bytes(), text.encode('utf-8'))
+
     def test_batch_size_bounds_before_side_effects(self):
         for inputs in ([], [self.source] * 1001):
             with self.assertRaises(ValueError):
