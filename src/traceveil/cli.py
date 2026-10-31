@@ -2,49 +2,58 @@
 
 import argparse
 import json
-import os
 from pathlib import Path
 import sys
 from .core import inspect_har, is_sanitized, sanitize
 from .report import render_report
 
-MAX_BYTES = 50 * 1024 * 1024
-
-
-def load(path):
-    with path.open("rb") as stream:
-        raw = stream.read(MAX_BYTES + 1)
-    if len(raw) > MAX_BYTES:
-        raise ValueError("Input exceeds the 50 MiB limit")
-    try:
-        return json.loads(raw, parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
-    except (ValueError, UnicodeError):
-        raise ValueError("Input is not valid finite JSON") from None
-
-
-def write_new(path, text):
-    # O_EXCL refuses existing files and symlinks; never overwrite the source.
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as stream:
-            stream.write(text)
-    except BaseException:
-        path.unlink(missing_ok=True)
-        raise
+from .storage import MAX_BYTES, load, write_new
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Offline HAR privacy review and conservative export")
-    parser.add_argument("command", choices=["inspect", "sanitize", "report", "verify"])
+    parser.add_argument("command", choices=["inspect", "sanitize", "report", "verify", "batch", "review", "compare"])
     parser.add_argument("input", type=Path)
+    parser.add_argument("additional_inputs", nargs="*", type=Path)
     parser.add_argument("-o", "--output", type=Path)
     args = parser.parse_args(argv)
     try:
+        if args.command == "batch":
+            from .batch import sanitize_batch
+            if args.output is None:
+                raise ValueError("batch requires a new output directory")
+            result = sanitize_batch([args.input, *args.additional_inputs], args.output)
+            print(json.dumps(result, indent=2, allow_nan=False))
+            return 0 if result["failed"] == 0 else 1
+        if args.command == "compare":
+            from .compare import compare_captures
+            if len(args.additional_inputs) != 1:
+                raise ValueError("compare requires exactly two captures")
+            result = compare_captures(load(args.input), load(args.additional_inputs[0]))
+            text = json.dumps(result, indent=2, allow_nan=False) + "\n"
+            if args.output is None:
+                print(text, end="")
+            else:
+                write_new(args.output, text)
+                print("Wrote new local aggregate comparison. Review before sharing.")
+            return 0
+        if args.additional_inputs:
+            raise ValueError("This command accepts one input")
         if args.command in {"sanitize", "report"} and args.output is None:
             raise ValueError("sanitize and report require --output")
         if args.command in {"inspect", "verify"} and args.output is not None:
             raise ValueError("inspect and verify do not write files")
         document = load(args.input)
+        if args.command == "review":
+            from .privacy import privacy_review
+            result = privacy_review(document)
+            text = json.dumps(result, indent=2, allow_nan=False) + "\n"
+            if args.output is None:
+                print(text, end="")
+            else:
+                write_new(args.output, text)
+                print("Wrote new local review. Manual review is still required.")
+            return 0 if result["canonical_safe_format"] else 1
         if args.command == "verify":
             valid = is_sanitized(document)
             print("Canonical conservative HAR" if valid else "Not a canonical conservative HAR")
